@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: shellcheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the scripts
+        run: shellcheck -s sh bin/claude-export tests/run.sh
+
+  test:
+    name: ${{ matrix.shell }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            shell: dash
+          - os: macos-latest
+            shell: sh
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Make sure jq, zip and unzip are present
+        run: jq --version && command -v zip unzip
+
+      # The shebang says sh, run it under the strictest shell on hand
+      - name: Run the tests
+        env:
+          TEST_SHELL: ${{ matrix.shell }}
+        run: |
+          sed -i.bak "1s|.*|#!$(command -v "$TEST_SHELL")|" bin/claude-export
+          "$TEST_SHELL" tests/run.sh
+
+  fish:
+    name: fish completions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install fish
+        run: sudo apt-get update && sudo apt-get install -y fish
+
+      - name: Check the syntax
+        run: fish --no-config -n completions/claude-export.fish

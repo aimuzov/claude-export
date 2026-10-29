@@ -1,0 +1,264 @@
+#!/bin/sh
+# claude-export: download a claude.ai data export by its manifest and unpack it.
+# https://github.com/aimuzov/claude-export
+
+set -u
+
+prog=claude-export
+version=0.1.0
+tab=$(printf '\t')
+
+usage() {
+	cat <<EOF
+Usage: $prog [-f dir]... [-t seconds] <manifest.json> [dest_root]
+
+Downloads every archive listed in a claude.ai data export manifest through
+your browser and unpacks it by category into dest_root/<created_at>.
+
+  -f dir      folder the browser saves downloads to, repeatable
+              (default: the manifest's folder and ~/Downloads)
+  -t seconds  how long to wait for each download (default: 300)
+  -h          show this help
+  -V          show the version
+
+Environment:
+  CLAUDE_EXPORT_DEST  default dest_root (default: ~/claude-export)
+  CLAUDE_EXPORT_OPEN  command that opens a URL (default: open or xdg-open)
+EOF
+}
+
+say() { printf '%s: %s\n' "$prog" "$*"; }
+err() { printf '%s: %s\n' "$prog" "$*" >&2; }
+
+sources=
+timeout=300
+
+while getopts f:t:hV opt; do
+	case $opt in
+		f) sources="$sources$OPTARG
+" ;;
+		t) timeout=$OPTARG ;;
+		h) usage; exit 0 ;;
+		V) echo "$prog $version"; exit 0 ;;
+		*) usage >&2; exit 2 ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+case $timeout in
+	'' | *[!0-9]* | 0)
+		err "-t takes a positive number of seconds, got '$timeout'"
+		exit 2
+		;;
+esac
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+	usage >&2
+	exit 2
+fi
+
+manifest=$1
+dest_root=${2:-${CLAUDE_EXPORT_DEST:-$HOME/claude-export}}
+
+if [ ! -f "$manifest" ]; then
+	err "manifest not found: $manifest"
+	exit 1
+fi
+
+for cmd in jq unzip find; do
+	if ! command -v "$cmd" >/dev/null 2>&1; then
+		err "$cmd not found"
+		exit 1
+	fi
+done
+
+if ! jq -e '.data_files | type == "array" and length > 0' "$manifest" >/dev/null 2>&1; then
+	err "$manifest is not valid JSON or lists no data_files"
+	exit 1
+fi
+
+manifest_version=$(jq -r '.version // empty' "$manifest")
+if [ "$manifest_version" != "1.0" ]; then
+	err "unexpected manifest version '$manifest_version', continuing anyway"
+fi
+
+# The browser saves the zips next to the manifest, which came the same way
+[ -n "$sources" ] || sources="$(dirname "$manifest")
+$HOME/Downloads
+"
+
+opener=${CLAUDE_EXPORT_OPEN:-}
+if [ -z "$opener" ]; then
+	if [ "$(uname -s)" = Darwin ]; then opener=open; else opener=xdg-open; fi
+fi
+
+ref=
+rows=$(mktemp)
+trap 'rm -f "$ref" "$rows"' EXIT
+trap 'exit 130' INT TERM
+
+# 2026-10-29T06:16:42.951205+00:00 → 2026-10-29T06:16:42
+created=$(jq -r '.created_at // empty | .[0:19]' "$manifest")
+
+if [ -n "$created" ]; then
+	stamp=$(printf '%s' "$created" | tr : -)
+
+	# Every export names its zips the same, so one left from an older export
+	# would pass for this one. Files older than this stamp are not ours
+	ref=$(mktemp)
+	if ! TZ=UTC0 touch -t "$(printf '%s' "$created" | sed 's/[-T:]//g; s/^\(.\{12\}\)/\1./')" "$ref" 2>/dev/null; then
+		err "can't read created_at '$created', any zip with a matching name will do"
+		rm -f "$ref"
+		ref=
+	fi
+else
+	err "no created_at in manifest, any zip with a matching name will do"
+	stamp=$(date -u +%Y-%m-%dT%H-%M-%S)
+fi
+
+dest=$dest_root/$stamp
+mkdir -p "$dest/zips" || exit 1
+cp "$manifest" "$dest/manifest.json"
+
+# Prints the newest finished download of $1 from this export
+pick() {
+	name=$1
+	base=${name%.zip}
+	set --
+
+	old_ifs=$IFS
+	IFS='
+'
+	for src in $sources; do
+		IFS=$old_ifs
+
+		# A browser renames a repeated download to "name (1).zip"
+		for file in "$src/$name" "$src/$base ("*").zip"; do
+			[ -f "$file" ] || continue
+
+			# Firefox creates the final name up front and fills name.part
+			[ -e "$file.part" ] && continue
+
+			if [ -n "$ref" ] && [ -z "$(find "$file" -prune -newer "$ref")" ]; then
+				continue
+			fi
+
+			set -- "$@" "$file"
+		done
+	done
+	IFS=$old_ifs
+
+	[ $# -gt 0 ] || return 1
+	command ls -t "$@" | head -n 1
+}
+
+# A used link opens an error page instead of a download, so no partial file
+# shows up: .crdownload (Chromium), .download (Safari), .part (Firefox)
+started() {
+	old_ifs=$IFS
+	IFS='
+'
+	for src in $sources; do
+		IFS=$old_ifs
+		[ -d "$src" ] || continue
+
+		if [ -n "$(find "$src" -maxdepth 1 -newer "$1" \
+			\( -name '*.crdownload' -o -name '*.download' -o -name '*.part' \) | head -n 1)" ]; then
+			IFS=$old_ifs
+			return 0
+		fi
+	done
+	IFS=$old_ifs
+
+	return 1
+}
+
+jq -r '.data_files[] | [.category, .filename, .export_url] | @tsv' "$manifest" >"$rows"
+
+ok=0
+failed=
+
+# Links may die once opened, so a failed file must not stop the rest
+while IFS=$tab read -r category filename url <&3; do
+	case "$category/$filename" in
+		*/*/* | .* | */.* | /* | */)
+			err "skipping a suspicious entry: '$category' '$filename'"
+			failed="$failed $filename"
+			continue
+			;;
+	esac
+
+	zip=$dest/zips/$filename
+
+	if [ -f "$zip" ]; then
+		say "$filename already in backup"
+	else
+		local_zip=$(pick "$filename")
+
+		# claude.ai keeps the links behind a Cloudflare challenge that curl
+		# can't pass, so the browser downloads them. It gives the file its
+		# final name only once the download completes
+		if [ -z "$local_zip" ]; then
+			say "$filename ← browser, waiting up to ${timeout}s"
+			marker=$dest/.opened
+			touch "$marker"
+			$opener "$url" >/dev/null 2>&1
+
+			is_started=
+			i=0
+			while [ "$i" -lt "$timeout" ]; do
+				sleep 1
+				i=$((i + 1))
+
+				local_zip=$(pick "$filename") && break
+
+				if [ -z "$is_started" ]; then
+					if started "$marker"; then
+						is_started=1
+					elif [ "$i" -ge 30 ]; then
+						break
+					fi
+				fi
+			done
+
+			rm -f "$marker"
+
+			if [ -z "$local_zip" ]; then
+				if [ -z "$is_started" ]; then
+					err "$filename download did not start, the link was used or has expired, request a new export"
+				else
+					err "$filename did not finish in ${timeout}s, download it and rerun"
+				fi
+				failed="$failed $filename"
+				continue
+			fi
+		fi
+
+		say "$filename ← $local_zip"
+
+		if ! unzip -tq "$local_zip" >/dev/null 2>&1; then
+			err "$local_zip is not a valid zip"
+			failed="$failed $filename"
+			continue
+		fi
+
+		cp "$local_zip" "$zip"
+	fi
+
+	if ! unzip -oq "$zip" -d "$dest/$category"; then
+		err "unzip failed: $filename"
+		failed="$failed $filename"
+		continue
+	fi
+
+	ok=$((ok + 1))
+done 3<"$rows"
+
+# shellcheck disable=SC2086 # split on purpose, the names have no spaces
+set -- $failed
+say "$ok ok, $# failed → $dest"
+
+if [ $# -gt 0 ]; then
+	printf '  failed: %s\n' "$@" >&2
+	exit 1
+fi

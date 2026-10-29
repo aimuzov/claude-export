@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;800;900&family=JetBrains+Mono:wght@400;600&display=block" rel="stylesheet">
+<style>
+	* { box-sizing: border-box; margin: 0; }
+	html, body { width: 2560px; height: 960px; overflow: hidden; }
+	body {
+		background:
+			radial-gradient(900px 420px at 2150px -80px, rgba(217, 119, 87, .26), transparent 70%),
+			radial-gradient(700px 500px at 150px 200px, rgba(217, 119, 87, .08), transparent 70%),
+			#0f0d0c;
+		color: #f5f1ee;
+		font-family: Inter, sans-serif;
+		position: relative;
+	}
+	.icon {
+		position: absolute; left: 148px; top: 132px; width: 140px; height: 140px; border-radius: 34px;
+		background: linear-gradient(160deg, #e48a6c, #b9573a);
+		box-shadow: 0 20px 80px rgba(217, 119, 87, .35);
+		display: grid; place-items: center;
+	}
+	.mono { font-family: 'JetBrains Mono', monospace; }
+	.repo { position: absolute; left: 148px; top: 338px; font-size: 50px; color: #948a85; letter-spacing: -.5px; }
+	.title { position: absolute; left: 140px; top: 400px; font-size: 168px; font-weight: 900; letter-spacing: -8px; line-height: 1; }
+	.title b { color: #d97757; font-weight: 900; }
+	.tag { position: absolute; left: 148px; top: 714px; font-size: 42px; font-weight: 800; letter-spacing: 15px; line-height: 60px; color: #f0b49e; text-transform: uppercase; }
+	.tag span { display: block; }
+	.win {
+		position: absolute; left: 1330px; top: 105px; width: 1360px; height: 900px; border-radius: 26px;
+		background: #1a1716; border: 2px solid #2e2927; box-shadow: 0 40px 120px rgba(0, 0, 0, .5);
+	}
+	.bar { height: 80px; border-bottom: 2px solid #2a2523; display: flex; align-items: center; gap: 16px; padding: 0 34px; font-size: 28px; color: #948a85; }
+	.dot { width: 22px; height: 22px; border-radius: 50%; background: #3d3633; }
+	.bar span { margin-left: 26px; }
+	.code { padding: 40px 48px; font-size: 28px; line-height: 48px; color: #ddd6d2; white-space: pre; }
+	.c-g { color: #948a85; } .c-s { color: #86efac; } .c-o { color: #f0a588; }
+	.card {
+		position: absolute; left: 1700px; top: 630px; width: 560px; height: 360px; border-radius: 26px;
+		background: #1d1918; border: 2px solid #322c2a; box-shadow: 0 40px 100px rgba(0, 0, 0, .6); padding: 34px 40px;
+	}
+	.card h4 { font-size: 26px; letter-spacing: 3px; color: #948a85; font-weight: 600; margin-bottom: 22px; }
+	.row { display: flex; align-items: center; gap: 22px; font-size: 30px; height: 56px; }
+	.ok { width: 32px; height: 32px; border-radius: 50%; background: #14532d; color: #4ade80; display: grid; place-items: center; font-size: 20px; font-style: normal; }
+	.row em { margin-left: auto; font-style: normal; color: #948a85; }
+</style>
+</head>
+<body>
+	<div class="icon">
+		<svg width="74" height="74" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
+	</div>
+	<div class="repo mono">aimuzov/</div>
+	<div class="title">claude<b>-export</b></div>
+	<div class="tag"><span id="tag1"></span><span id="tag2"></span></div>
+
+	<div class="win mono">
+		<div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>~/Downloads</span></div>
+<div class="code"><span class="c-g">$</span> claude-export manifest-<span class="c-o">2026-10-29</span>.json
+<span class="c-g">claude-export:</span> projects-000.zip ← browser
+<span class="c-g">claude-export:</span> projects-000.zip ← ~/Downloads
+<span class="c-g">claude-export:</span> memories-000.zip ← browser
+<span class="c-g">claude-export:</span> memories-000.zip ← ~/Downloads
+<span class="c-g">claude-export:</span> conversations-000.zip ← browser
+<span class="c-g">claude-export:</span> conversations-000.zip ← ~/Downloads
+<span class="c-s">claude-export: 8 ok, 0 failed</span></div>
+	</div>
+
+	<div class="card mono">
+		<h4 id="card"></h4>
+		<div class="row"><i class="ok">✓</i>conversations<em>11M</em></div>
+		<div class="row"><i class="ok">✓</i>projects<em>72K</em></div>
+		<div class="row"><i class="ok">✓</i>memories<em>52K</em></div>
+		<div class="row"><i class="ok">✓</i>frames<em>255M</em></div>
+	</div>
+	<script>
+		const ru = new URLSearchParams(location.search).get('lang') === 'ru'
+		const [a, b, card] = ru
+			? ['Экспорт claude.ai', 'одной командой', 'РАСПАКОВАНО']
+			: ['Claude.ai export', 'in one command', 'UNPACKED']
+		document.getElementById('tag1').textContent = a
+		document.getElementById('tag2').textContent = b
+		document.getElementById('card').textContent = card
+	</script>
+</body>
+</html>
