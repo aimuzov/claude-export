@@ -1,8 +1,8 @@
 #!/bin/sh
-# Runs claude-export against fake manifests and a fake browser.
+# Runs both claude.export implementations against fake manifests and a fake browser.
 # Usage: sh tests/run.sh [sh|fish]
-#   sh    bin/claude-export (default)
-#   fish  the claude.export function from functions/
+#   sh    bin/claude.export (default)
+#   fish  functions/claude.export.fish
 
 set -u
 
@@ -11,7 +11,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 case ${1:-sh} in
-	sh) cli=$root/bin/claude-export ;;
+	sh) cli=$root/bin/claude.export ;;
 	fish)
 		# One executable for both, so every case below runs unchanged
 		cli=$tmp/claude.export

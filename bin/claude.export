@@ -1,11 +1,11 @@
 #!/bin/sh
-# claude-export: download a claude.ai data export by its manifest and unpack it.
+# claude.export: download a claude.ai data export by its manifest and unpack it.
 # https://github.com/aimuzov/claude-export
 
 set -u
 
-prog=claude-export
-version=0.2.0
+prog=claude.export
+version=0.3.0
 tab=$(printf '\t')
 
 usage() {

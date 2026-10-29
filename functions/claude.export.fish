@@ -1,10 +1,10 @@
 # claude.export: download a claude.ai data export by its manifest and unpack it.
-# The fish twin of bin/claude-export, both pass the same tests/run.sh.
+# The fish twin of bin/claude.export, both pass the same tests/run.sh.
 # https://github.com/aimuzov/claude-export
 
 function claude.export --description 'Download a claude.ai data export by its manifest and unpack it'
     set -l prog claude.export
-    set -l prog_version 0.2.0
+    set -l prog_version 0.3.0
 
     if not argparse --name $prog 'f/from=+' 't/timeout=' h/help V/version -- $argv
         printf "Try '%s --help' for more information.\n" $prog >&2

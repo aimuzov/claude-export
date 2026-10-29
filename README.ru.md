@@ -15,12 +15,8 @@
 <h3 align="center">Экспорт данных claude.ai, распакованный одной командой</h3>
 <p align="center">Даёшь манифест, а он скачивает через браузер каждый архив, проверяет его и раскладывает по категориям</p>
 
-```fish
-claude.export ~/Downloads/manifest-….json   # fish
-```
-
 ```sh
-claude-export ~/Downloads/manifest-….json   # любой другой shell
+claude.export ~/Downloads/manifest-….json
 ```
 
 ## Зачем
@@ -30,26 +26,21 @@ claude.ai присылает экспорт как маленький JSON-ма�
 проходит. В итоге кликаешь восемь ссылок, ждёшь каждую загрузку и руками распаковываешь восемь zip,
 а один лишний клик по уже использованной ссылке означает новый запрос экспорта.
 
-`claude-export` делает этот круг за тебя. Он открывает каждую ссылку в браузере по умолчанию,
+`claude.export` делает этот круг за тебя. Он открывает каждую ссылку в браузере по умолчанию,
 который проходит проверку и уже залогинен, ждёт конца загрузки и распаковывает архив. Ссылку,
 которая вместо загрузки открыла страницу с ошибкой, он отметит за 30 секунд, а не по таймауту.
 
-## Две версии
+## fish и sh
 
-Инструмент есть в двух реализациях, которые ведут себя одинаково и проходят одни и те же тесты:
-
-| | fish | любой другой shell |
-| --- | --- | --- |
-| Команда | `claude.export` | `claude-export` |
-| Файл | [`functions/claude.export.fish`](functions/claude.export.fish) | [`bin/claude-export`](bin/claude-export), POSIX `sh` |
-| Автодополнение | [`completions/claude.export.fish`](completions/claude.export.fish) | [`completions/claude-export.fish`](completions/claude-export.fish) для fish |
-
-Ниже `claude-export` означает любую из них.
+Команда в любом shell называется `claude.export`. У неё две реализации, которые ведут себя
+одинаково и проходят одни и те же тесты: [`functions/claude.export.fish`](functions/claude.export.fish)
+для fish и [`bin/claude.export`](bin/claude.export) на POSIX `sh` для остальных. В fish функция
+побеждает файл из `PATH`, так что если стоят обе, ничего не сломается.
 
 ## Что нужно
 
 - macOS или Linux
-- [fish](https://fishshell.com) 4.0 или новее для `claude.export`, любой POSIX `sh` для `claude-export`
+- [fish](https://fishshell.com) 4.0 или новее для функции, любой POSIX `sh` для `bin/claude.export`
 - [jq](https://jqlang.github.io/jq/), `unzip`, `find`
 - браузер, который сохраняет загрузки в известную папку
 
@@ -91,8 +82,8 @@ fish сам не заглядывает в подпапки `functions/` и `com
 CLI -- это один файл:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude-export \
-	-o ~/.local/bin/claude-export && chmod +x ~/.local/bin/claude-export
+curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude.export \
+	-o ~/.local/bin/claude.export && chmod +x ~/.local/bin/claude.export
 ```
 
 ## Как пользоваться
@@ -102,7 +93,7 @@ curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/clau
 3. Запусти:
 
 ```sh
-claude-export [options] <manifest.json> [dest_root]
+claude.export [options] <manifest.json> [dest_root]
 ```
 
 | Опция | Что значит |
@@ -147,9 +138,9 @@ claude-export [options] <manifest.json> [dest_root]
 ## Разработка
 
 ```sh
-sh tests/run.sh sh     # bin/claude-export
-sh tests/run.sh fish   # claude.export
-shellcheck -s sh bin/claude-export tests/run.sh
+sh tests/run.sh sh     # bin/claude.export
+sh tests/run.sh fish   # functions/claude.export.fish
+shellcheck -s sh bin/claude.export tests/run.sh
 ```
 
 Одни и те же проверки гоняются на обеих реализациях, с фейковыми манифестами и фейковым браузером

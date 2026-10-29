@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Check the scripts
-        run: shellcheck -s sh bin/claude-export tests/run.sh
+        run: shellcheck -s sh bin/claude.export tests/run.sh
 
   test:
     name: ${{ matrix.shell }} on ${{ matrix.os }}
@@ -41,7 +41,7 @@ jobs:
         env:
           TEST_SHELL: ${{ matrix.shell }}
         run: |
-          sed -i.bak "1s|.*|#!$(command -v "$TEST_SHELL")|" bin/claude-export
+          sed -i.bak "1s|.*|#!$(command -v "$TEST_SHELL")|" bin/claude.export
           "$TEST_SHELL" tests/run.sh
 
   fish:
@@ -70,6 +70,6 @@ jobs:
       - name: Check the syntax
         run: fish --no-config -n functions/*.fish completions/*.fish
 
-      # The same cases as for bin/claude-export, run against claude.export
+      # The same cases as for bin/claude.export, run against the fish function
       - name: Run the tests
         run: sh tests/run.sh fish

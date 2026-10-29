@@ -15,12 +15,8 @@
 <h3 align="center">Your claude.ai data export, unpacked in one command</h3>
 <p align="center">Give it the manifest, and it downloads every archive through your browser, checks it and unpacks it by category</p>
 
-```fish
-claude.export ~/Downloads/manifest-….json   # fish
-```
-
 ```sh
-claude-export ~/Downloads/manifest-….json   # any other shell
+claude.export ~/Downloads/manifest-….json
 ```
 
 ## Why
@@ -30,26 +26,21 @@ claude.ai sends the export as a small JSON manifest with a link per archive. The
 up clicking eight links, waiting for each download and unpacking eight zips by hand, and one stray
 click on a used link means asking for a new export.
 
-`claude-export` does that round for you. It opens each link in your default browser, which passes
+`claude.export` does that round for you. It opens each link in your default browser, which passes
 the check and is already signed in, waits until the download finishes and unpacks it. A link that
 opens an error page instead of a download is reported within 30 seconds, not after a timeout.
 
-## Two of them
+## fish and sh
 
-The same tool comes in two implementations that behave the same and pass the same tests:
-
-| | fish | any other shell |
-| --- | --- | --- |
-| Command | `claude.export` | `claude-export` |
-| File | [`functions/claude.export.fish`](functions/claude.export.fish) | [`bin/claude-export`](bin/claude-export), POSIX `sh` |
-| Completions | [`completions/claude.export.fish`](completions/claude.export.fish) | [`completions/claude-export.fish`](completions/claude-export.fish) for fish |
-
-Below, `claude-export` stands for either of them.
+The command is `claude.export` in every shell. It comes in two implementations that behave the
+same and pass the same tests: [`functions/claude.export.fish`](functions/claude.export.fish) for fish
+and [`bin/claude.export`](bin/claude.export) in POSIX `sh` for the rest. In fish the function wins
+over the file in `PATH`, so having both installed does no harm.
 
 ## Requirements
 
 - macOS or Linux
-- [fish](https://fishshell.com) 4.0 or newer for `claude.export`, any POSIX `sh` for `claude-export`
+- [fish](https://fishshell.com) 4.0 or newer for the function, any POSIX `sh` for `bin/claude.export`
 - [jq](https://jqlang.github.io/jq/), `unzip`, `find`
 - a browser that saves downloads to a known folder
 
@@ -91,8 +82,8 @@ fish does not look into subfolders of `functions/` and `completions/` by itself,
 The CLI is a single file:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude-export \
-	-o ~/.local/bin/claude-export && chmod +x ~/.local/bin/claude-export
+curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude.export \
+	-o ~/.local/bin/claude.export && chmod +x ~/.local/bin/claude.export
 ```
 
 ## Usage
@@ -103,7 +94,7 @@ curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/clau
 3. Run:
 
 ```sh
-claude-export [options] <manifest.json> [dest_root]
+claude.export [options] <manifest.json> [dest_root]
 ```
 
 | Option | Meaning |
@@ -148,9 +139,9 @@ The result lands in `dest_root/<created_at>/`:
 ## Development
 
 ```sh
-sh tests/run.sh sh     # bin/claude-export
-sh tests/run.sh fish   # claude.export
-shellcheck -s sh bin/claude-export tests/run.sh
+sh tests/run.sh sh     # bin/claude.export
+sh tests/run.sh fish   # functions/claude.export.fish
+shellcheck -s sh bin/claude.export tests/run.sh
 ```
 
 The same cases run against both implementations, with fake manifests and a fake browser set
