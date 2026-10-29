@@ -15,8 +15,12 @@
 <h3 align="center">Экспорт данных claude.ai, распакованный одной командой</h3>
 <p align="center">Даёшь манифест, а он скачивает через браузер каждый архив, проверяет его и раскладывает по категориям</p>
 
+```fish
+claude.export ~/Downloads/manifest-….json   # fish
+```
+
 ```sh
-claude-export ~/Downloads/manifest-….json
+claude-export ~/Downloads/manifest-….json   # любой другой shell
 ```
 
 ## Зачем
@@ -30,36 +34,65 @@ claude.ai присылает экспорт как маленький JSON-ма�
 который проходит проверку и уже залогинен, ждёт конца загрузки и распаковывает архив. Ссылку,
 которая вместо загрузки открыла страницу с ошибкой, он отметит за 30 секунд, а не по таймауту.
 
+## Две версии
+
+Инструмент есть в двух реализациях, которые ведут себя одинаково и проходят одни и те же тесты:
+
+| | fish | любой другой shell |
+| --- | --- | --- |
+| Команда | `claude.export` | `claude-export` |
+| Файл | [`functions/claude.export.fish`](functions/claude.export.fish) | [`bin/claude-export`](bin/claude-export), POSIX `sh` |
+| Автодополнение | [`completions/claude.export.fish`](completions/claude.export.fish) | [`completions/claude-export.fish`](completions/claude-export.fish) для fish |
+
+Ниже `claude-export` означает любую из них.
+
 ## Что нужно
 
-- macOS или Linux с любым POSIX `sh`
+- macOS или Linux
+- [fish](https://fishshell.com) 4.0 или новее для `claude.export`, любой POSIX `sh` для `claude-export`
 - [jq](https://jqlang.github.io/jq/), `unzip`, `find`
 - браузер, который сохраняет загрузки в известную папку
 
 ## Установка
+
+### fish
+
+Через [fisher](https://github.com/jorgebucaran/fisher):
+
+```fish
+fisher install aimuzov/claude-export
+```
+
+Через [chezmoi](https://www.chezmoi.io/), в `.chezmoiexternal.toml`:
+
+```toml
+[".config/fish/functions/claude-export"]
+type = "archive"
+url = "https://github.com/aimuzov/claude-export/archive/main.tar.gz"
+exact = true
+stripComponents = 2
+refreshPeriod = "168h"
+include = ["*/functions/**"]
+
+[".config/fish/completions/claude-export"]
+type = "archive"
+url = "https://github.com/aimuzov/claude-export/archive/main.tar.gz"
+exact = true
+stripComponents = 2
+refreshPeriod = "168h"
+include = ["*/completions/claude.export.fish"]
+```
+
+fish сам не заглядывает в подпапки `functions/` и `completions/`, так что добавь их в
+`fish_function_path` и `fish_complete_path` или убери уровень папки из целей.
+
+### Любой другой shell
 
 CLI -- это один файл:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude-export \
 	-o ~/.local/bin/claude-export && chmod +x ~/.local/bin/claude-export
-```
-
-Автодополнение для fish:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/completions/claude-export.fish \
-	-o ~/.config/fish/completions/claude-export.fish
-```
-
-Через [chezmoi](https://www.chezmoi.io/), в `.chezmoiexternal.toml`:
-
-```toml
-[".local/bin/claude-export"]
-type = "file"
-url = "https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude-export"
-executable = true
-refreshPeriod = "168h"
 ```
 
 ## Как пользоваться
@@ -114,11 +147,13 @@ claude-export [options] <manifest.json> [dest_root]
 ## Разработка
 
 ```sh
-sh tests/run.sh
+sh tests/run.sh sh     # bin/claude-export
+sh tests/run.sh fish   # claude.export
 shellcheck -s sh bin/claude-export tests/run.sh
 ```
 
-Тесты гоняют CLI на фейковых манифестах с фейковым браузером через `CLAUDE_EXPORT_OPEN`.
+Одни и те же проверки гоняются на обеих реализациях, с фейковыми манифестами и фейковым браузером
+через `CLAUDE_EXPORT_OPEN`. Исправление в одной из них идёт в другую в том же коммите.
 
 ## Лицензия
 

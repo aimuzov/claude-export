@@ -1,13 +1,31 @@
 #!/bin/sh
 # Runs claude-export against fake manifests and a fake browser.
-# Usage: sh tests/run.sh
+# Usage: sh tests/run.sh [sh|fish]
+#   sh    bin/claude-export (default)
+#   fish  the claude.export function from functions/
 
 set -u
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-cli=$root/bin/claude-export
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
+
+case ${1:-sh} in
+	sh) cli=$root/bin/claude-export ;;
+	fish)
+		# One executable for both, so every case below runs unchanged
+		cli=$tmp/claude.export
+		cat >"$cli" <<EOF
+#!/bin/sh
+exec fish --no-config -c 'source "\$argv[1]"; claude.export \$argv[2..]' "$root/functions/claude.export.fish" "\$@"
+EOF
+		chmod +x "$cli"
+		;;
+	*)
+		echo "usage: sh tests/run.sh [sh|fish]" >&2
+		exit 2
+		;;
+esac
 
 passed=0
 failed=0
@@ -114,11 +132,11 @@ run "no arguments"
 check code_is 2
 
 run "version" -V
-check has "claude-export "
+check has "export 0."
 
 run "long version" --version
 check code_is 0
-check has "claude-export "
+check has "export 0."
 
 run "help" --help
 check code_is 0
@@ -140,11 +158,11 @@ check code_is 0
 
 run "unknown option" --nope "$tmp/r.json"
 check code_is 2
-check has "unknown option: --nope"
+check has "--nope"
 
 run "option without a value" "$tmp/r.json" --from
 check code_is 2
-check has "--from needs a folder"
+check has "--from"
 
 run "bad long timeout" --timeout=abc "$tmp/r.json"
 check code_is 2

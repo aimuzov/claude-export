@@ -45,14 +45,31 @@ jobs:
           "$TEST_SHELL" tests/run.sh
 
   fish:
-    name: fish completions
-    runs-on: ubuntu-latest
+    name: fish on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install fish
-        run: sudo apt-get update && sudo apt-get install -y fish
+      - name: Install fish from the release PPA
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository -y ppa:fish-shell/release-4
+          sudo apt-get update
+          sudo apt-get install -y fish
+
+      - name: Install fish from homebrew
+        if: runner.os == 'macOS'
+        run: brew install fish
 
       - name: Check the syntax
-        run: fish --no-config -n completions/claude-export.fish
+        run: fish --no-config -n functions/*.fish completions/*.fish
+
+      # The same cases as for bin/claude-export, run against claude.export
+      - name: Run the tests
+        run: sh tests/run.sh fish

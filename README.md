@@ -15,8 +15,12 @@
 <h3 align="center">Your claude.ai data export, unpacked in one command</h3>
 <p align="center">Give it the manifest, and it downloads every archive through your browser, checks it and unpacks it by category</p>
 
+```fish
+claude.export ~/Downloads/manifest-….json   # fish
+```
+
 ```sh
-claude-export ~/Downloads/manifest-….json
+claude-export ~/Downloads/manifest-….json   # any other shell
 ```
 
 ## Why
@@ -30,36 +34,65 @@ click on a used link means asking for a new export.
 the check and is already signed in, waits until the download finishes and unpacks it. A link that
 opens an error page instead of a download is reported within 30 seconds, not after a timeout.
 
+## Two of them
+
+The same tool comes in two implementations that behave the same and pass the same tests:
+
+| | fish | any other shell |
+| --- | --- | --- |
+| Command | `claude.export` | `claude-export` |
+| File | [`functions/claude.export.fish`](functions/claude.export.fish) | [`bin/claude-export`](bin/claude-export), POSIX `sh` |
+| Completions | [`completions/claude.export.fish`](completions/claude.export.fish) | [`completions/claude-export.fish`](completions/claude-export.fish) for fish |
+
+Below, `claude-export` stands for either of them.
+
 ## Requirements
 
-- macOS or Linux with any POSIX `sh`
+- macOS or Linux
+- [fish](https://fishshell.com) 4.0 or newer for `claude.export`, any POSIX `sh` for `claude-export`
 - [jq](https://jqlang.github.io/jq/), `unzip`, `find`
 - a browser that saves downloads to a known folder
 
 ## Install
+
+### fish
+
+With [fisher](https://github.com/jorgebucaran/fisher):
+
+```fish
+fisher install aimuzov/claude-export
+```
+
+With [chezmoi](https://www.chezmoi.io/), in `.chezmoiexternal.toml`:
+
+```toml
+[".config/fish/functions/claude-export"]
+type = "archive"
+url = "https://github.com/aimuzov/claude-export/archive/main.tar.gz"
+exact = true
+stripComponents = 2
+refreshPeriod = "168h"
+include = ["*/functions/**"]
+
+[".config/fish/completions/claude-export"]
+type = "archive"
+url = "https://github.com/aimuzov/claude-export/archive/main.tar.gz"
+exact = true
+stripComponents = 2
+refreshPeriod = "168h"
+include = ["*/completions/claude.export.fish"]
+```
+
+fish does not look into subfolders of `functions/` and `completions/` by itself, so add them to
+`fish_function_path` and `fish_complete_path`, or drop the folder level from the targets.
+
+### Any other shell
 
 The CLI is a single file:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude-export \
 	-o ~/.local/bin/claude-export && chmod +x ~/.local/bin/claude-export
-```
-
-Completions for fish:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/aimuzov/claude-export/main/completions/claude-export.fish \
-	-o ~/.config/fish/completions/claude-export.fish
-```
-
-With [chezmoi](https://www.chezmoi.io/), in `.chezmoiexternal.toml`:
-
-```toml
-[".local/bin/claude-export"]
-type = "file"
-url = "https://raw.githubusercontent.com/aimuzov/claude-export/main/bin/claude-export"
-executable = true
-refreshPeriod = "168h"
 ```
 
 ## Usage
@@ -115,11 +148,13 @@ The result lands in `dest_root/<created_at>/`:
 ## Development
 
 ```sh
-sh tests/run.sh
+sh tests/run.sh sh     # bin/claude-export
+sh tests/run.sh fish   # claude.export
 shellcheck -s sh bin/claude-export tests/run.sh
 ```
 
-The tests run the CLI against fake manifests with a fake browser set through `CLAUDE_EXPORT_OPEN`.
+The same cases run against both implementations, with fake manifests and a fake browser set
+through `CLAUDE_EXPORT_OPEN`. A fix in one of them goes into the other in the same commit.
 
 ## License
 
