@@ -116,5 +116,42 @@ check code_is 2
 run "version" -V
 check has "claude-export "
 
+run "long version" --version
+check code_is 0
+check has "claude-export "
+
+run "help" --help
+check code_is 0
+check has "--timeout seconds"
+
+run "long options with a space" --from "$tmp/dl" --timeout 5 "$tmp/r.json" "$tmp/out4"
+check code_is 0
+check has "local-000.zip ← $tmp/dl/local-000.zip"
+
+run "long options with =, after the manifest" "$tmp/r.json" "$tmp/out5" --from="$tmp/dl" --timeout=5
+check code_is 0
+check has "local-000.zip ← $tmp/dl/local-000.zip"
+
+run "short options glued to the value" "-f$tmp/dl" -t5 "$tmp/r.json" "$tmp/out6"
+check code_is 0
+
+run "-- ends the options" -f "$tmp/dl" -- "$tmp/r.json" "$tmp/out7"
+check code_is 0
+
+run "unknown option" --nope "$tmp/r.json"
+check code_is 2
+check has "unknown option: --nope"
+
+run "option without a value" "$tmp/r.json" --from
+check code_is 2
+check has "--from needs a folder"
+
+run "bad long timeout" --timeout=abc "$tmp/r.json"
+check code_is 2
+
+run "too many arguments" "$tmp/r.json" "$tmp/out8" extra
+check code_is 2
+check has "unexpected argument: extra"
+
 printf '%d passed, %d failed\n' "$passed" "$failed"
 [ "$failed" -eq 0 ]

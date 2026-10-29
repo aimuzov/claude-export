@@ -70,14 +70,16 @@ refreshPeriod = "168h"
 3. Run:
 
 ```sh
-claude-export [-f dir]... [-t seconds] <manifest.json> [dest_root]
+claude-export [options] <manifest.json> [dest_root]
 ```
 
 | Option | Meaning |
 | --- | --- |
-| `-f dir` | Folder the browser saves downloads to, repeatable. Default: the manifest's folder and `~/Downloads` |
-| `-t seconds` | How long to wait for each download. Default: 300 |
+| `-f`, `--from dir` | Folder the browser saves downloads to, repeatable. Default: the manifest's folder and `~/Downloads` |
+| `-t`, `--timeout seconds` | How long to wait for each download. Default: 300 |
 | `dest_root` | Where backups go. Default: `$CLAUDE_EXPORT_DEST` or `~/claude-export` |
+| `-h`, `--help` | Show help |
+| `-V`, `--version` | Show the version |
 
 The result lands in `dest_root/<created_at>/`:
 

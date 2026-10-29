@@ -5,21 +5,22 @@
 set -u
 
 prog=claude-export
-version=0.1.0
+version=0.2.0
 tab=$(printf '\t')
 
 usage() {
 	cat <<EOF
-Usage: $prog [-f dir]... [-t seconds] <manifest.json> [dest_root]
+Usage: $prog [options] <manifest.json> [dest_root]
 
 Downloads every archive listed in a claude.ai data export manifest through
 your browser and unpacks it by category into dest_root/<created_at>.
 
-  -f dir      folder the browser saves downloads to, repeatable
-              (default: the manifest's folder and ~/Downloads)
-  -t seconds  how long to wait for each download (default: 300)
-  -h          show this help
-  -V          show the version
+Options:
+  -f, --from dir         folder the browser saves downloads to, repeatable
+                         (default: the manifest's folder and ~/Downloads)
+  -t, --timeout seconds  how long to wait for each download (default: 300)
+  -h, --help             show this help
+  -V, --version          show the version
 
 Environment:
   CLAUDE_EXPORT_DEST  default dest_root (default: ~/claude-export)
@@ -30,35 +31,75 @@ EOF
 say() { printf '%s: %s\n' "$prog" "$*"; }
 err() { printf '%s: %s\n' "$prog" "$*" >&2; }
 
+usage_error() {
+	err "$1"
+	printf "Try '%s --help' for more information.\n" "$prog" >&2
+	exit 2
+}
+
 sources=
 timeout=300
+manifest=
+dest_root=
+positional=0
 
-while getopts f:t:hV opt; do
-	case $opt in
-		f) sources="$sources$OPTARG
-" ;;
-		t) timeout=$OPTARG ;;
-		h) usage; exit 0 ;;
-		V) echo "$prog $version"; exit 0 ;;
-		*) usage >&2; exit 2 ;;
+add_source() {
+	sources="$sources$1
+"
+}
+
+add_positional() {
+	positional=$((positional + 1))
+	case $positional in
+		1) manifest=$1 ;;
+		2) dest_root=$1 ;;
+		*) usage_error "unexpected argument: $1" ;;
 	esac
+}
+
+# getopts knows no long options, so the arguments are parsed by hand.
+# Options may come before or after the manifest
+while [ $# -gt 0 ]; do
+	case $1 in
+		-f | --from)
+			[ $# -ge 2 ] || usage_error "$1 needs a folder"
+			add_source "$2"
+			shift
+			;;
+		--from=*) add_source "${1#*=}" ;;
+		-f?*) add_source "${1#-f}" ;;
+		-t | --timeout)
+			[ $# -ge 2 ] || usage_error "$1 needs a number of seconds"
+			timeout=$2
+			shift
+			;;
+		--timeout=*) timeout=${1#*=} ;;
+		-t?*) timeout=${1#-t} ;;
+		-h | --help)
+			usage
+			exit 0
+			;;
+		-V | --version)
+			echo "$prog $version"
+			exit 0
+			;;
+		--)
+			shift
+			for arg in "$@"; do add_positional "$arg"; done
+			break
+			;;
+		-?*) usage_error "unknown option: $1" ;;
+		*) add_positional "$1" ;;
+	esac
+	shift
 done
-shift $((OPTIND - 1))
 
 case $timeout in
-	'' | *[!0-9]* | 0)
-		err "-t takes a positive number of seconds, got '$timeout'"
-		exit 2
-		;;
+	'' | *[!0-9]* | 0) usage_error "--timeout takes a positive number of seconds, got '$timeout'" ;;
 esac
 
-if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-	usage >&2
-	exit 2
-fi
-
-manifest=$1
-dest_root=${2:-${CLAUDE_EXPORT_DEST:-$HOME/claude-export}}
+[ -n "$manifest" ] || usage_error "no manifest given"
+[ -n "$dest_root" ] || dest_root=${CLAUDE_EXPORT_DEST:-$HOME/claude-export}
 
 if [ ! -f "$manifest" ]; then
 	err "manifest not found: $manifest"

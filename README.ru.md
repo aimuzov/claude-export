@@ -69,14 +69,16 @@ refreshPeriod = "168h"
 3. Запусти:
 
 ```sh
-claude-export [-f dir]... [-t seconds] <manifest.json> [dest_root]
+claude-export [options] <manifest.json> [dest_root]
 ```
 
 | Опция | Что значит |
 | --- | --- |
-| `-f dir` | Папка, куда браузер сохраняет загрузки, можно несколько. По умолчанию папка манифеста и `~/Downloads` |
-| `-t seconds` | Сколько ждать каждую загрузку. По умолчанию 300 |
+| `-f`, `--from dir` | Папка, куда браузер сохраняет загрузки, можно несколько. По умолчанию папка манифеста и `~/Downloads` |
+| `-t`, `--timeout seconds` | Сколько ждать каждую загрузку. По умолчанию 300 |
 | `dest_root` | Куда класть бэкапы. По умолчанию `$CLAUDE_EXPORT_DEST` или `~/claude-export` |
+| `-h`, `--help` | Показать справку |
+| `-V`, `--version` | Показать версию |
 
 Результат окажется в `dest_root/<created_at>/`:
 
