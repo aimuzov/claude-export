@@ -1,11 +1,19 @@
-[Русская версия](README.ru.md)
+<p align="center">
+	<img src="https://img.shields.io/badge/English-d97757?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PGNsaXBQYXRoIGlkPSJ0Ij48cGF0aCBkPSJNMzAsMTVoMzB2MTV6djE1aC0zMHpoLTMwdi0xNXp2LTE1aDMweiIvPjwvY2xpcFBhdGg+PHBhdGggZD0iTTAsMHYzMGg2MHYtMzB6IiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCA2MCwzME02MCwwIDAsMzAiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PHBhdGggZD0iTTAsMCA2MCwzME02MCwwIDAsMzAiIGNsaXAtcGF0aD0idXJsKCN0KSIgc3Ryb2tlPSIjQzgxMDJFIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMzAsMHYzME0wLDE1aDYwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTAiLz48cGF0aCBkPSJNMzAsMHYzME0wLDE1aDYwIiBzdHJva2U9IiNDODEwMkUiIHN0cm9rZS13aWR0aD0iNiIvPjwvc3ZnPg==" alt="English">
+	<a href="README.ru.md"><img src="https://img.shields.io/badge/%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9-555?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5IDYiPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0wIDBoOXYzSDB6Ii8+PHBhdGggZmlsbD0iIzAwMzlhNiIgZD0iTTAgMmg5djJIMHoiLz48cGF0aCBmaWxsPSIjZDUyYjFlIiBkPSJNMCA0aDl2MkgweiIvPjwvc3ZnPg==" alt="Русский"></a>
+</p>
 
-![claude-export](.github/assets/banner.en.jpg)
+<p align="center">
+	<a href="https://github.com/aimuzov/claude-export"><img src=".github/assets/banner.en.jpg" alt="claude-export: a claude.ai data export in one command" width="100%"></a>
+</p>
 
-# claude-export
+<p align="center">
+	<a href="https://github.com/aimuzov/claude-export/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/aimuzov/claude-export/ci.yml?branch=main&label=ci" alt="CI"></a>
+	<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-d97757" alt="License: MIT"></a>
+</p>
 
-Turns a claude.ai data export into a folder on your disk with one command: give it the manifest,
-and it downloads every archive through your browser, checks it and unpacks it by category.
+<h3 align="center">Your claude.ai data export, unpacked in one command</h3>
+<p align="center">Give it the manifest, and it downloads every archive through your browser, checks it and unpacks it by category</p>
 
 ```sh
 claude-export ~/Downloads/manifest-….json
